@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <style>
+    body { font-family: sans-serif; background: #1e1f22; color: #fff; padding: 24px; }
+    h1 { color: #5865f2; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #3f4147; }
+    th { background: #2b2d31; color: #949ba4; font-size: 12px; text-transform: uppercase; }
+    tr:hover { background: #2b2d31; }
+    .btn-delete { background: #f23f43; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .btn-delete:hover { background: #c73336; }
+    img { width: 32px; height: 32px; border-radius: 50%; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #23a55a; color: #fff; padding: 10px 20px; border-radius: 999px; font-size: 14px; display: none; }
+  </style>
+</head>
+<body>
+  <h1>👑 Admin Panel</h1>
+  <p style="color:#949ba4">Kelola akun user Diskort</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Avatar</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="user-list"></tbody>
+  </table>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    async function loadUsers() {
+      const res = await fetch('/api/admin/users');
+      const users = await res.json();
+      const tbody = document.getElementById('user-list');
+      tbody.innerHTML = '';
+      users.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><img src="${u.avatar}" alt=""></td>
+          <td>${u.username}</td>
+          <td>${u.email || '-'}</td>
+          <td><button class="btn-delete" onclick="deleteUser('${u.username}', this)">🗑 Hapus</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function deleteUser(username, btn) {
+      if (!confirm(`Hapus akun "${username}"?`)) return;
+      btn.disabled = true;
+      const res = await fetch('/api/admin/users/' + username, { method: 'DELETE' });
+      if (res.ok) {
+        showToast('✅ Akun ' + username + ' dihapus');
+        loadUsers();
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 2500);
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
